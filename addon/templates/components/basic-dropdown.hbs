@@ -1,4 +1,4 @@
-{{yield (hash
+{{#with (hash
   uniqueId=publicAPI.uniqueId
   isOpen=publicAPI.isOpen
   disabled=publicAPI.disabled
@@ -23,4 +23,11 @@
     width=(readonly width)
     height=(readonly height)
   )
+  as |api|
 )}}
+{{#if this.renderInPlace}}
+    <div class="ember-basic-dropdown" ...attributes>{{yield api}}</div>
+  {{else}}
+    {{yield api}}
+  {{/if}}
+{{/with}}
