@@ -1,10 +1,10 @@
-import Component from "@ember/component";
-import { computed } from "@ember/object";
-import { readOnly } from "@ember/object/computed";
+import Component from '@ember/component';
+import { computed } from '@ember/object';
+import { readOnly } from '@ember/object/computed';
 import layout from '../../templates/components/basic-dropdown/trigger';
 import fallbackIfUndefined from '../../utils/computed-fallback-if-undefined';
 
-const isTouchDevice = (!!self.window && 'ontouchstart' in self.window);
+const isTouchDevice = !!self.window && 'ontouchstart' in self.window;
 
 function trueStringIfPresent(path) {
   return computed(path, function() {
@@ -19,7 +19,7 @@ function trueStringIfPresent(path) {
 export default Component.extend({
   layout,
   isTouchDevice,
-  classNames: ['ember-basic-dropdown-trigger'],
+  classNames: [ 'ember-basic-dropdown-trigger' ],
   role: fallbackIfUndefined('button'),
 
   // Need this intermediary property, because in older ember versions the passed in attribute would
@@ -27,13 +27,13 @@ export default Component.extend({
   ariaRole: readOnly('role'),
   tabindex: 0,
   eventType: 'mousedown',
-  classNameBindings: ['inPlaceClass', 'hPositionClass', 'vPositionClass'],
+  classNameBindings: [ 'inPlaceClass', 'hPositionClass', 'vPositionClass' ],
   attributeBindings: [
     'ariaRole:role',
     'style',
     'uniqueId:data-ebd-id',
     'tabIndex:tabindex',
-    'dropdownId:aria-owns',
+    'ariaOwns:aria-owns',
     'ariaLabel:aria-label',
     'ariaLabelledBy:aria-labelledby',
     'ariaDescribedBy:aria-describedby',
@@ -80,6 +80,10 @@ export default Component.extend({
   'aria-pressed': trueStringIfPresent('ariaPressed'),
   'aria-required': trueStringIfPresent('ariaRequired'),
 
+  ariaOwns: computed('dropdownId', 'dropdown.isOpen', function() {
+    return this.get('dropdown.isOpen') ? this.get('dropdownId') : false;
+  }),
+
   tabIndex: computed('dropdown.disabled', 'tabindex', function() {
     let tabindex = this.get('tabindex');
     if (tabindex === false || this.get('dropdown.disabled')) {
@@ -123,7 +127,9 @@ export default Component.extend({
         return;
       }
       if (this.get('eventType') === 'mousedown') {
-        if (e.button !== 0) { return; }
+        if (e.button !== 0) {
+          return;
+        }
         this.stopTextSelectionUntilMouseup();
         if (this.toggleIsBeingHandledByTouchEvents) {
           // Some devises have both touchscreen & mouse, and they are not mutually exclusive
@@ -156,7 +162,7 @@ export default Component.extend({
     handleTouchEnd(e) {
       this.toggleIsBeingHandledByTouchEvents = true;
       let dropdown = this.get('dropdown');
-      if (e && e.defaultPrevented || dropdown.disabled) {
+      if ((e && e.defaultPrevented) || dropdown.disabled) {
         return;
       }
       if (!this.hasMoved) {
@@ -175,7 +181,9 @@ export default Component.extend({
       // to simulate natural behaviour.
       e.target.focus();
       setTimeout(function() {
-        if (!e.target) { return; }
+        if (!e.target) {
+          return;
+        }
         let event;
         try {
           event = document.createEvent('MouseEvents');
@@ -198,9 +206,11 @@ export default Component.extend({
       if (onKeyDown && onKeyDown(dropdown, e) === false) {
         return;
       }
-      if (e.keyCode === 13) {  // Enter
+      if (e.keyCode === 13) {
+        // Enter
         dropdown.actions.toggle(e);
-      } else if (e.keyCode === 32) { // Space
+      } else if (e.keyCode === 32) {
+        // Space
         e.preventDefault(); // prevents the space to trigger a scroll page-next
         dropdown.actions.toggle(e);
       } else if (e.keyCode === 27) {
@@ -227,38 +237,46 @@ export default Component.extend({
       this.element.addEventListener('touchstart', () => {
         self.document.addEventListener('touchmove', this._touchMoveHandler);
       });
-      this.element.addEventListener('touchend', (e) => this.send('handleTouchEnd', e));
+      this.element.addEventListener('touchend', e => this.send('handleTouchEnd', e));
     }
-    this.element.addEventListener('mousedown', (e) => this.send('handleMouseDown', e));
-    this.element.addEventListener('click', (e) => this.send('handleClick', e));
-    this.element.addEventListener('keydown', (e) => this.send('handleKeyDown', e));
+    this.element.addEventListener('mousedown', e => this.send('handleMouseDown', e));
+    this.element.addEventListener('click', e => this.send('handleClick', e));
+    this.element.addEventListener('keydown', e => this.send('handleKeyDown', e));
   },
 
   addOptionalHandlers() {
     let dropdown = this.get('dropdown');
     let onMouseEnter = this.get('onMouseEnter');
     if (onMouseEnter) {
-      this.element.addEventListener('mouseenter', (e) => onMouseEnter(dropdown, e));
+      this.element.addEventListener('mouseenter', e => onMouseEnter(dropdown, e));
     }
     let onMouseLeave = this.get('onMouseLeave');
     if (onMouseLeave) {
-      this.element.addEventListener('mouseleave', (e) => onMouseLeave(dropdown, e));
+      this.element.addEventListener('mouseleave', e => onMouseLeave(dropdown, e));
+    }
+    let onKeyDown = this.get('onKeyDown');
+    if (onKeyDown) {
+      this.dropdownElement.addEventListener('keydown', e => onKeyDown(dropdown, e));
     }
     let onFocus = this.get('onFocus');
     if (onFocus) {
-      this.element.addEventListener('focus', (e) => onFocus(dropdown, e));
+      this.element.addEventListener('focus', e => onFocus(dropdown, e));
     }
     let onBlur = this.get('onBlur');
     if (onBlur) {
-      this.element.addEventListener('blur', (e) => onBlur(dropdown, e));
+      this.element.addEventListener('blur', e => onBlur(dropdown, e));
     }
     let onFocusIn = this.get('onFocusIn');
     if (onFocusIn) {
-      this.element.addEventListener('focusin', (e) => onFocusIn(dropdown, e));
+      this.element.addEventListener('focusin', e => onFocusIn(dropdown, e));
     }
     let onFocusOut = this.get('onFocusOut');
     if (onFocusOut) {
-      this.element.addEventListener('focusout', (e) => onFocusOut(dropdown, e));
+      this.element.addEventListener('focusout', e => onFocusOut(dropdown, e));
+    }
+    let onKeyUp = this.get('onKeyUp');
+    if (onKeyUp) {
+      this.element.addEventListener('keyup', e => onKeyUp(dropdown, e));
     }
   }
 });
